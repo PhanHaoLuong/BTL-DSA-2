@@ -92,6 +92,24 @@ AVLNode* AVLTree<K, T>::rotateLeft(AVLNode*& node) {
     return r;
 }
 
+template <class K, class T>
+int AVLTree<K, T>::getHeight() const {
+    if (!this->root) return 0;
+    queue<AVLNode*> q;
+    q.push(this->root);
+
+    int height = 0;
+    while (!q.empty()) {
+        AVLNode* current = q.front(); q.pop();
+        if (current->pLeft) q.push(current->pLeft);
+        if (current->pRight) q.push(current->pRight);
+
+        ++height;
+    }
+
+    return height;
+}
+
 // =====================================
 // RedBlackTree<K, T> implementation
 // =====================================
