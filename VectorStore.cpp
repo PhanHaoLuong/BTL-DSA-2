@@ -66,8 +66,31 @@ void AVLTree<K, T>::printTreeStructure() const {
 
 
 //TODO: Implement all AVLTree<K, T> methods here
+template <class K, class T>
+AVLNode* AVLTree<K, T>::rotateRight(AVLNode*& node) {
+    if (node == nullptr || node->pLeft) return node;
 
+    AVLNode* l = node->pLeft;
+    AVLNode* r = l->pRight;
 
+    l->pRight = node;
+    node->pLeft = r;
+
+    return l;
+}
+
+template <class K, class T>
+AVLNode* AVLTree<K, T>::rotateLeft(AVLNode*& node) {
+    if (node == nullptr || node->pRight) return node;
+
+    AVLNode* r = node->pRight;
+    AVLNode* l = r->pRight;
+
+    r->pLeft = node;
+    node->pRight = l;
+
+    return r;
+}
 
 // =====================================
 // RedBlackTree<K, T> implementation
