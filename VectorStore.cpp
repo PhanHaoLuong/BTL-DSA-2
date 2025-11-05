@@ -99,6 +99,14 @@ int AVLTree<K, T>::height(AVLNode* node) {
 }
 
 template <class K, class T>
+BalanceValue AVLTree<K, T>::getBalance(AVLNode* node) {
+    int lHeight = height(node->pLeft);
+    int rHeight = height(node->pRight);
+    BalanceValue balance = (BalanceValue)(lHeight - rHeight);
+    return balance;
+}
+
+template <class K, class T>
 typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::insertHelper(AVLNode* node, const K& key, const T& value) {
     if (!node) {
         return new AVLNode(key, value);
@@ -112,9 +120,7 @@ typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::insertHelper(AVLNode* node, cons
         return node;
     }
 
-    int lHeight = height(node->pLeft);
-    int rHeight = height(node->pRight);
-    node->balance = (BalanceValue)(lHeight - rHeight);
+    node->balance = getBalance(node);
 
     //Left-Left
     if (node->balance > 1 && key < node->pLeft->key) {
@@ -141,6 +147,68 @@ typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::insertHelper(AVLNode* node, cons
 template <class K, class T>
 void AVLTree<K, T>::insert(const K& key, const T& value) {
     this->root = insertHelper(this->root, key, value);
+}
+
+template <class K, class T>
+typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::minNode(AVLNode* node) {
+    AVLNode* current = node;
+
+    while (current->pLeft) current = current->pLeft;
+
+    return current;
+}
+
+template <class K, class T>
+typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::removeHelper(AVLNode* node, const K& key) {
+    if (!node) return node;
+
+    if (key < node->key) {
+        node->pLeft = removeHelper(node->pLeft, key);
+    }
+    else if (key > node->key) {
+        node->pRight = removeHelper(node->pRight, key);
+    } else {
+        if ((node->pLeft == nullptr) || (node->pRight == nullptr)) {
+            AVLNode* temp = node->pLeft ? node->pLeft : node->pRight;
+
+            if (!temp) {
+                temp = node;
+                node = nullptr;
+            } else *node = *temp;
+            free(temp);
+        } else {
+            AVLNode* temp = minNode(node->pRight);
+
+            node->key = temp->key;
+            node->pRight = removeHelper(node->pRight, temp->key);
+        }
+    }
+
+    if (!node) return node;
+
+    node->balance = getBalance(node);
+
+    if (node->balance > 1 && getBalance(node->pLeft) >= 0) {
+        return rotateRight(node);
+    }
+    if (node->balance < -1 && getBalance(node->pRight) <= 0) {
+        return rotateLeft(node);
+    }
+    if (node->balance > 1 && getBalance(node->pLeft) < 0) {
+        node->pLeft = rotateLeft(node->pLeft);
+        return rotateRight(node);
+    }
+    if (node->balance < -1 && getBalance(node->pRight) > 0) {
+        node->pRight = rotateRight(node->pRight);
+        return rotateLeft(node);
+    }
+
+    return node;
+}
+
+template <class K, class T>
+void AVLTree<K, T>::remove(const K& key) {
+    this->root = removeHelper(this->root, key);
 }
 
 template <class K, class T>

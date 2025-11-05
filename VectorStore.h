@@ -43,6 +43,7 @@ class AVLTree {
         AVLNode* rotateRight(AVLNode*& node);
         AVLNode* rotateLeft(AVLNode*& node);
         int height(AVLNode* node);
+        BalanceValue getBalance(AVLNode* node);
         void clearHelper(AVLNode* node);
 
     public:
@@ -53,6 +54,8 @@ class AVLTree {
         void insert(const K& key, const T& value);
         AVLNode* insertHelper(AVLNode* node, const K& key, const T& value);
         void remove(const K& key);
+        AVLNode* removeHelper(AVLNode* node, const K& key);
+        AVLNode* minNode(AVLNode* node);
         bool contains(const K& key) const;
 
         int getHeight() const;
