@@ -67,7 +67,7 @@ void AVLTree<K, T>::printTreeStructure() const {
 
 //TODO: Implement all AVLTree<K, T> methods here
 template <class K, class T>
-AVLNode* AVLTree<K, T>::rotateRight(AVLNode*& node) {
+typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::rotateRight(AVLNode*& node) {
     if (!node || !node->pLeft) return node;
 
     AVLNode* x = node->pLeft;
@@ -80,7 +80,7 @@ AVLNode* AVLTree<K, T>::rotateRight(AVLNode*& node) {
 }
 
 template <class K, class T>
-AVLNode* AVLTree<K, T>::rotateLeft(AVLNode*& node) {
+typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::rotateLeft(AVLNode*& node) {
     if (!node || !node->pRight) return node;
 
     AVLNode* y = node->pRight;
@@ -105,14 +105,16 @@ typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::insertHelper(AVLNode* node, cons
     }
 
     if (key < node->key) {
-        node = insertHelper(node->pLeft, key, value);
+        node->pLeft = insertHelper(node->pLeft, key, value);
     } else if (key > node->key) {
-        node = insertHelper(node->pRight, key, value);
+        node->pRight = insertHelper(node->pRight, key, value);
+    } else {
+        return node;
     }
 
     int lHeight = height(node->pLeft);
     int rHeight = height(node->pRight);
-    node->balance = lHeight - rHeight;
+    node->balance = (BalanceValue)(lHeight - rHeight);
 
     //Left-Left
     if (node->balance > 1 && key < node->pLeft->key) {
@@ -138,8 +140,21 @@ typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::insertHelper(AVLNode* node, cons
 
 template <class K, class T>
 void AVLTree<K, T>::insert(const K& key, const T& value) {
-    if (this->contains(key)) return;
     this->root = insertHelper(this->root, key, value);
+}
+
+template <class K, class T>
+bool AVLTree<K, T>::contains(const K& key) const {
+    if (!this->root) return false;
+
+    AVLNode* current = this->root;
+    while (current) {
+        if (key == current->key) return true;
+
+        if (key < current->key) current = current->pLeft;
+        else if (key > current->key) current = current->pRight;
+    }
+    return false;
 }
 
 template <class K, class T>
