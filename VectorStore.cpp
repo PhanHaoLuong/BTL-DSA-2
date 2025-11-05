@@ -68,42 +68,45 @@ void AVLTree<K, T>::printTreeStructure() const {
 //TODO: Implement all AVLTree<K, T> methods here
 template <class K, class T>
 AVLNode* AVLTree<K, T>::rotateRight(AVLNode*& node) {
-    if (node == nullptr || node->pLeft) return node;
+    if (node == nullptr || node->pLeft == nullptr) return node;
 
-    AVLNode* l = node->pLeft;
-    AVLNode* r = l->pRight;
+    AVLNode* x = node->pLeft;
+    AVLNode* r = x->pRight;
 
-    l->pRight = node;
+    x->pRight = node;
     node->pLeft = r;
 
-    return l;
+    return x;
 }
 
 template <class K, class T>
 AVLNode* AVLTree<K, T>::rotateLeft(AVLNode*& node) {
-    if (node == nullptr || node->pRight) return node;
+    if (node == nullptr || node->pRight == nullptr) return node;
 
-    AVLNode* r = node->pRight;
-    AVLNode* l = r->pRight;
+    AVLNode* y = node->pRight;
+    AVLNode* l = y->pRight;
 
-    r->pLeft = node;
+    y->pLeft = node;
     node->pRight = l;
 
-    return r;
+    return y;
 }
 
 template <class K, class T>
 int AVLTree<K, T>::getHeight() const {
     if (!this->root) return 0;
+
     queue<AVLNode*> q;
     q.push(this->root);
 
     int height = 0;
     while (!q.empty()) {
-        AVLNode* current = q.front(); q.pop();
-        if (current->pLeft) q.push(current->pLeft);
-        if (current->pRight) q.push(current->pRight);
-
+        int levelSize = q.size();
+        for (int i = 0; i < levelSize; ++i) {
+            AVLNode* current = q.front(); q.pop();
+            if (current->pLeft) q.push(current->pLeft);
+            if (current->pRight) q.push(current->pRight);
+        }
         ++height;
     }
 
