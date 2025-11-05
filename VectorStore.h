@@ -34,7 +34,6 @@ class AVLTree {
 
             AVLNode(const K& key, const T& value)
                 : key(key), data(value), pLeft(nullptr), pRight(nullptr), balance(EH) {}
-                
             friend class VectorStore; // Allow VectorStore to access AVLNode members
         };
 
@@ -43,14 +42,16 @@ class AVLTree {
 
         AVLNode* rotateRight(AVLNode*& node);
         AVLNode* rotateLeft(AVLNode*& node);
+        int height(AVLNode* node);
         void clearHelper(AVLNode* node);
 
     public:
         AVLTree()
-            : root(nullptr);
+            : root(nullptr) {}
         ~AVLTree();
 
         void insert(const K& key, const T& value);
+        AVLNode* insertHelper(AVLNode* node, const K& key, const &T value);
         void remove(const K& key);
         bool contains(const K& key) const;
 

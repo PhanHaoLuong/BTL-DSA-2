@@ -68,7 +68,7 @@ void AVLTree<K, T>::printTreeStructure() const {
 //TODO: Implement all AVLTree<K, T> methods here
 template <class K, class T>
 AVLNode* AVLTree<K, T>::rotateRight(AVLNode*& node) {
-    if (node == nullptr || node->pLeft == nullptr) return node;
+    if (!node || !node->pLeft) return node;
 
     AVLNode* x = node->pLeft;
     AVLNode* r = x->pRight;
@@ -81,7 +81,7 @@ AVLNode* AVLTree<K, T>::rotateRight(AVLNode*& node) {
 
 template <class K, class T>
 AVLNode* AVLTree<K, T>::rotateLeft(AVLNode*& node) {
-    if (node == nullptr || node->pRight == nullptr) return node;
+    if (!node || !node->pRight) return node;
 
     AVLNode* y = node->pRight;
     AVLNode* l = y->pRight;
@@ -90,6 +90,56 @@ AVLNode* AVLTree<K, T>::rotateLeft(AVLNode*& node) {
     node->pRight = l;
 
     return y;
+}
+
+template <class K, class T>
+int AVLTree<K, T>::height(AVLNode* node) {
+    if (!node) return 0;
+    return 1 + max(height(node->pLeft), height(node->pRight));
+}
+
+template <class K, class T>
+typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::insertHelper(AVLNode* node, const K& key, const T& value) {
+    if (!node) {
+        return new AVLNode(key, value);
+    }
+
+    if (key < node->key) {
+        node = insertHelper(node->pLeft, key, value);
+    } else if (key > node->key) {
+        node = insertHelper(node->pRight, key, value);
+    }
+
+    int lHeight = height(node->pLeft);
+    int rHeight = height(node->pRight);
+    node->balance = lHeight - rHeight;
+
+    //Left-Left
+    if (node->balance > 1 && key < node->pLeft->key) {
+        return rotateRight(node);
+    }
+    //Right-Right
+    if (node->balance < -1 && key > node->pRight->key) {
+        return rotateLeft(node);
+    }
+    //Left-Right
+    if (node->balance > 1 && key > node->pLeft->key) {
+        node->pLeft = rotateLeft(node->pLeft);
+        return rotateRight(node);
+    }
+    //Right-Left
+    if (node->balance < -1 && key < node->pRight->key) {
+        node->pRight = rotateRight(node->pRight);
+        return rotateLeft(node);
+    }
+
+    return node;
+}
+
+template <class K, class T>
+void AVLTree<K, T>::insert(const K& key, const T& value) {
+    if (this->contains(key)) return;
+    this->root = insertHelper(this->root, key, value);
 }
 
 template <class K, class T>
@@ -111,6 +161,29 @@ int AVLTree<K, T>::getHeight() const {
     }
 
     return height;
+}
+
+template <class K, class T>
+int AVLTree<K, T>::getSize() const {
+    if (!this->root) return 0;
+
+    queue<AVLNode*> q;
+    q.push(this->root);
+
+    int size = 0;
+    while (!q.empty()) {
+        AVLNode* current = q.front(); q.pop();
+        if (current->pLeft) q.push(current->pLeft);
+        if (current->pRight) q.push(current->pRight);
+        ++size;
+    }
+
+    return size;
+}
+
+template <class K, class T>
+bool AVLTree<K, T>::empty() const {
+    return (!this->root? true : false);
 }
 
 // =====================================
