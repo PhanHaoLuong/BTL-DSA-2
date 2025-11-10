@@ -49,8 +49,9 @@ class AVLTree {
     public:
         AVLTree()
             : root(nullptr) {}
-        ~AVLTree();
-
+        ~AVLTree() {
+			this->clear();
+		};
         void insert(const K& key, const T& value);
         AVLNode* insertHelper(AVLNode* node, const K& key, const T& value);
         void remove(const K& key);

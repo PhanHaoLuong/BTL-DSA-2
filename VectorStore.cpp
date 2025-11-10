@@ -84,7 +84,7 @@ typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::rotateLeft(AVLNode*& node) {
     if (!node || !node->pRight) return node;
 
     AVLNode* y = node->pRight;
-    AVLNode* l = y->pRight;
+    AVLNode* l = y->pLeft;
 
     y->pLeft = node;
     node->pRight = l;
@@ -267,6 +267,11 @@ int AVLTree<K, T>::getSize() const {
 template <class K, class T>
 bool AVLTree<K, T>::empty() const {
     return (!this->root? true : false);
+}
+
+template <class K, class T>
+void AVLTree<K, T>::clear() {
+	while (this->root) this->remove(this->root->key);
 }
 
 // =====================================
