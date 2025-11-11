@@ -67,6 +67,7 @@ class AVLTree {
         void printTreeStructure() const;
 
         void inorderTraversal(void (*action)(const T&)) const;
+		void inorderTraversalHelper(AVLNode* node, void (*action)(const T&)) const;
 
         AVLNode* getRoot() const { return root; }
 };

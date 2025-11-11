@@ -274,6 +274,20 @@ void AVLTree<K, T>::clear() {
 	while (this->root) this->remove(this->root->key);
 }
 
+template <class K, class T>
+void AVLTree<K, T>::inorderTraversalHelper(AVLNode* node, void (*action)(const T&)) const {
+	if (!node) return;
+
+	inorderTraversalHelper(node->pLeft, action);
+	action(node->data);
+	inorderTraversalHelper(node->pRight, action);
+}
+
+template <class K, class T>
+void AVLTree<K, T>::inorderTraversal(void (*action)(const T&)) const {
+	inorderTraversalHelper(this->root, action);
+}
+
 // =====================================
 // RedBlackTree<K, T> implementation
 // =====================================
