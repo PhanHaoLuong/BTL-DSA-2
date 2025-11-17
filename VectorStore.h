@@ -92,7 +92,8 @@ class RBTNode {
         RBTNode* right;
 
         // Constructor
-        RBTNode(const K& key, const T& value);
+        RBTNode(const K& key, const T& value)
+            : key(key), value(value), color(RED), parent(nullptr), left(nullptr), right(nullptr) {}
         
         void recolorToRed();
         void recolorToBlack();
@@ -111,8 +112,11 @@ protected:
     RBTNode* upperBoundNode(const K& key) const;
 
 public:
-    RedBlackTree();
-    ~RedBlackTree();
+    RedBlackTree()
+        : root(nullptr) {}
+    ~RedBlackTree() {
+        this->clear();
+    }
     
     bool empty() const;
     int size() const;

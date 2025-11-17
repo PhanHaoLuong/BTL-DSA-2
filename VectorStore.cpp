@@ -364,9 +364,67 @@ void RedBlackTree<K, T>::printTreeStructure() const {
 }
 
 //TODO: Implement all other RedBlackTree<K, T> methods here
+template <class K, class T>
+void RedBlackTree::recolorToRed() {
+    this->color = RED;
+}
 
+template <class K, class T>
+void RedBlackTree::recolorToBlack() {
+    this->color = BLACK;
+}
 
+template <class K, class T>
+void RedBlackTree::rotateRight(RBTNode* node) {
+    if (!node || !node->left) return node;
 
+    RBTNode* x = node->left;
+    RBTNode* r = x->right;
+
+    x->right = node;
+    node->left = r;
+
+    return x;
+}
+
+template <class K, class T>
+void RedBlackTree::rotateLeft(RBTNode* node) {
+    if (!node || !node->right) return node;
+
+    RBTNode* y = node->right;
+    RBTNode* l = y->left;
+
+    y->left = node;
+    node->right = l;
+
+    return y;
+}
+
+template <class K, class T>
+RedBlackTree::RBTNode* RedBlackTree::lowerBoundNode(const &K key) const {
+    RBTNode* cur = this->root;
+
+    while (cur) {
+        if (cur->key >= key) {
+            return cur;
+        cur = cur->right;
+    }
+
+    return nullptr;
+}
+
+template <class K, class T>
+RedBlackTree::RBTNode* RedBlackTree::upperBoundNode(const &K key) const {
+    RBTNode* cur = this->root;
+
+    while (cur) {
+        if (cur->key > key) {
+            return cur;
+        cur = cur->right;
+    }
+
+    return nullptr;
+}
 
 // =====================================
 // VectorRecord implementation
