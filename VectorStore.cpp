@@ -433,7 +433,20 @@ bool RedBlackTree<K, T>::empty() const {
 
 template <class K, class T>
 int RedBlackTree<K, T>::size() const {
-    
+    if (!this->root) return 0;
+
+    queue<RBTNode*> q; q.push(this->root);
+    int size = 0;
+
+    while (q) {
+        RBTNode* cur = q.front(); q.pop();
+        ++size;
+
+        if (cur->left) q.push(left);
+        if (cur->right) q.push(right);
+    }
+
+    return size;
 }
 
 template <class K, class T>
