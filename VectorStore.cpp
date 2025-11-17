@@ -365,17 +365,17 @@ void RedBlackTree<K, T>::printTreeStructure() const {
 
 //TODO: Implement all other RedBlackTree<K, T> methods here
 template <class K, class T>
-void RedBlackTree::recolorToRed() {
+void RedBlackTree<K, T>::recolorToRed() {
     this->color = RED;
 }
 
 template <class K, class T>
-void RedBlackTree::recolorToBlack() {
+void RedBlackTree<K, T>::recolorToBlack() {
     this->color = BLACK;
 }
 
 template <class K, class T>
-void RedBlackTree::rotateRight(RBTNode* node) {
+void RedBlackTree<K, T>::rotateRight(RBTNode* node) {
     if (!node || !node->left) return node;
 
     RBTNode* x = node->left;
@@ -388,7 +388,7 @@ void RedBlackTree::rotateRight(RBTNode* node) {
 }
 
 template <class K, class T>
-void RedBlackTree::rotateLeft(RBTNode* node) {
+void RedBlackTree<K, T>::rotateLeft(RBTNode* node) {
     if (!node || !node->right) return node;
 
     RBTNode* y = node->right;
@@ -401,7 +401,7 @@ void RedBlackTree::rotateLeft(RBTNode* node) {
 }
 
 template <class K, class T>
-RedBlackTree::RBTNode* RedBlackTree::lowerBoundNode(const &K key) const {
+RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::lowerBoundNode(const &K key) const {
     RBTNode* cur = this->root;
 
     while (cur) {
@@ -414,7 +414,7 @@ RedBlackTree::RBTNode* RedBlackTree::lowerBoundNode(const &K key) const {
 }
 
 template <class K, class T>
-RedBlackTree::RBTNode* RedBlackTree::upperBoundNode(const &K key) const {
+RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::upperBoundNode(const &K key) const {
     RBTNode* cur = this->root;
 
     while (cur) {
