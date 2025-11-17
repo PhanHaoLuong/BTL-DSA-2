@@ -426,6 +426,77 @@ RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::upperBoundNode(const &K key) co
     return nullptr;
 }
 
+template <class K, class T>
+bool RedBlackTree<K, T>::empty() const {
+    return (!this->root ? true : false);
+}
+
+template <class K, class T>
+int RedBlackTree<K, T>::size() const {
+    
+}
+
+template <class K, class T>
+void RedBlackTree<K, T>::clear() {
+
+}
+
+template <class K, class T>
+void RedBlackTree<K, T>::insert(const K& key, const T& value) {
+
+}
+
+template <class K, class T>
+void RedBlackTree<K, T>::remove(const K& key) {
+
+}
+
+template <class K, class T>
+RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::find(const K& key) const {
+
+}
+
+template <class K, class T>
+bool RedBlackTree<K, T>::contains(const K& key) const {
+
+}
+
+template <class K, class T>
+RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::lowerBound(const K& key, bool& found) const{
+    RBTNode* res = nullptr;
+    RBTNode* cur = this->root;
+
+    while (cur) {
+        if (cur->key >= key) {
+            res = cur;
+            cur = cur->left;
+        } else cur = cur->right;
+    }
+
+    if (res) {
+        found = true;
+    }
+    return res;
+}
+
+template <class K, class T>
+RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::upperBound(const K& key, bool& found) const{
+    RBTNode* res = nullptr;
+    RBTNode* cur = this->root;
+
+    while (cur) {
+        if (cur->key > key) {
+            res = cur;
+            cur = cur->left;
+        } else cur = cur->right;
+    }
+
+    if (res) {
+        found = true;
+    }
+    return res;
+}
+
 // =====================================
 // VectorRecord implementation
 // =====================================
