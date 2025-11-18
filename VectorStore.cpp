@@ -465,12 +465,30 @@ void RedBlackTree<K, T>::remove(const K& key) {
 
 template <class K, class T>
 typename RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::find(const K& key) const {
+	if (!this->root) return nullptr;
+	
+	RBTNode* current = this->root;
+	while (current) {
+		if (current->key == key) return current;
+		else if (current->key < key) current = current->left;
+		else current = current->right;
+	}
 
+	return nullptr;
 }
 
 template <class K, class T>
 bool RedBlackTree<K, T>::contains(const K& key) const {
+	if (!this->root) return false;
+	
+	RBTNode* current = this->root;
+	while (current) {
+		if (current->key == key) return true;
+		else if (current->key < key) current = current->left;
+		else current = current->right;
+	}
 
+	return false;
 }
 
 template <class K, class T>
