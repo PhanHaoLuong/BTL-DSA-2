@@ -270,8 +270,18 @@ bool AVLTree<K, T>::empty() const {
 }
 
 template <class K, class T>
+void AVLTree<K, T>::clearHelper(AVLNode* node) {
+	if (!node) return;
+
+	clearHelper(node->pLeft);
+	clearHelper(node->pRight);
+	delete node;
+}
+
+template <class K, class T>
 void AVLTree<K, T>::clear() {
-	while (this->root) this->remove(this->root->key);
+	clearHelper(this->root);
+	this->root = nullptr;
 }
 
 template <class K, class T>
@@ -449,8 +459,18 @@ int RedBlackTree<K, T>::size() const {
 }
 
 template <class K, class T>
-void RedBlackTree<K, T>::clear() {
+void RedBlackTree<K, T>::clearHelper(RBTNode* node) {
+	if (!node) return;
 
+	clearHelper(node->left);
+	clearHelper(node->right);
+	delete node;
+}
+
+template <class K, class T>
+void RedBlackTree<K, T>::clear() {
+	clearHelper(this->root);
+	this->root = nullptr;
 }
 
 template <class K, class T>

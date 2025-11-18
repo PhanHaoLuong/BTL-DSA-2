@@ -107,6 +107,7 @@ private:
 protected:
     void rotateLeft(RBTNode* node);
     void rotateRight(RBTNode* node);
+	void clearHelper(RBTNode* node);
 
     RBTNode* lowerBoundNode(const K& key) const;
     RBTNode* upperBoundNode(const K& key) const;
