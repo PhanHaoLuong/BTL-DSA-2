@@ -365,18 +365,18 @@ void RedBlackTree<K, T>::printTreeStructure() const {
 
 //TODO: Implement all other RedBlackTree<K, T> methods here
 template <class K, class T>
-void RedBlackTree<K, T>::recolorToRed() {
+void RedBlackTree<K, T>::RBTNode::recolorToRed() {
     this->color = RED;
 }
 
 template <class K, class T>
-void RedBlackTree<K, T>::recolorToBlack() {
+void RedBlackTree<K, T>::RBTNode::recolorToBlack() {
     this->color = BLACK;
 }
 
 template <class K, class T>
 void RedBlackTree<K, T>::rotateRight(RBTNode* node) {
-    if (!node || !node->left) return node;
+    if (!node || !node->left) return;
 
     RBTNode* x = node->left;
     RBTNode* r = x->right;
@@ -384,42 +384,41 @@ void RedBlackTree<K, T>::rotateRight(RBTNode* node) {
     x->right = node;
     node->left = r;
 
-    return x;
 }
 
 template <class K, class T>
 void RedBlackTree<K, T>::rotateLeft(RBTNode* node) {
-    if (!node || !node->right) return node;
+    if (!node || !node->right) return;
 
     RBTNode* y = node->right;
     RBTNode* l = y->left;
 
     y->left = node;
     node->right = l;
-
-    return y;
 }
 
 template <class K, class T>
-RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::lowerBoundNode(const &K key) const {
+typename RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::lowerBoundNode(const K& key) const {
     RBTNode* cur = this->root;
 
     while (cur) {
         if (cur->key >= key) {
             return cur;
+		}
         cur = cur->right;
-    }
+	}
 
     return nullptr;
 }
 
 template <class K, class T>
-RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::upperBoundNode(const &K key) const {
+typename RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::upperBoundNode(const K& key) const {
     RBTNode* cur = this->root;
 
     while (cur) {
         if (cur->key > key) {
             return cur;
+		}
         cur = cur->right;
     }
 
@@ -438,12 +437,12 @@ int RedBlackTree<K, T>::size() const {
     queue<RBTNode*> q; q.push(this->root);
     int size = 0;
 
-    while (q) {
+    while (!q.empty()) {
         RBTNode* cur = q.front(); q.pop();
         ++size;
 
-        if (cur->left) q.push(left);
-        if (cur->right) q.push(right);
+        if (cur->left) q.push(cur->left);
+        if (cur->right) q.push(cur->right);
     }
 
     return size;
@@ -465,7 +464,7 @@ void RedBlackTree<K, T>::remove(const K& key) {
 }
 
 template <class K, class T>
-RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::find(const K& key) const {
+typename RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::find(const K& key) const {
 
 }
 
@@ -475,7 +474,7 @@ bool RedBlackTree<K, T>::contains(const K& key) const {
 }
 
 template <class K, class T>
-RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::lowerBound(const K& key, bool& found) const{
+typename RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::lowerBound(const K& key, bool& found) const{
     RBTNode* res = nullptr;
     RBTNode* cur = this->root;
 
@@ -493,7 +492,7 @@ RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::lowerBound(const K& key, bool& 
 }
 
 template <class K, class T>
-RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::upperBound(const K& key, bool& found) const{
+typename RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::upperBound(const K& key, bool& found) const{
     RBTNode* res = nullptr;
     RBTNode* cur = this->root;
 

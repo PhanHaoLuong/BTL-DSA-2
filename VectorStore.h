@@ -93,7 +93,7 @@ class RBTNode {
 
         // Constructor
         RBTNode(const K& key, const T& value)
-            : key(key), value(value), color(RED), parent(nullptr), left(nullptr), right(nullptr) {}
+            : key(key), data(value), color(RED), parent(nullptr), left(nullptr), right(nullptr) {}
         
         void recolorToRed();
         void recolorToBlack();
