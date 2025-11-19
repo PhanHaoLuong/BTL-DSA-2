@@ -497,8 +497,88 @@ void RedBlackTree<K, T>::clear() {
 }
 
 template <class K, class T>
-void RedBlackTree<K, T>::insert(const K& key, const T& value) {
+void RedBlackTree<K, T>::insertHelper(RBTNode* node) {
+    while (node != this->root && node->parent->color == RED) {
+        RBTNode* parent = node->parent;
+        RBTNode* grand = parent->parent;
 
+        // parent is left child
+        if (parent == grand->left) {
+            RBTNode* uncle = grand->right;
+
+            // Case 1: uncle is RED → recolor
+            if (uncle && uncle->color == RED) {
+                parent->color = BLACK;
+                uncle->color = BLACK;
+                grand->color = RED;
+                node = grand;
+            }
+            else {
+                // Case 2: node is right child → rotate left
+                if (node == parent->right) {
+                    node = parent;
+                    rotateLeft(node);
+                }
+                // Case 3: node is left child → rotate right
+                parent->color = BLACK;
+                grand->color = RED;
+                rotateRight(grand);
+            }
+        }
+
+        // parent is right child
+        else {
+            RBTNode* uncle = grand->left;
+
+            if (uncle && uncle->color == RED) {
+                parent->color = BLACK;
+                uncle->color = BLACK;
+                grand->color = RED;
+                node = grand;
+            }
+            else {
+                if (node == parent->left) {
+                    node = parent;
+                    rotateRight(node);
+                }
+                parent->color = BLACK;
+                grand->color = RED;
+                rotateLeft(grand);
+            }
+        }
+    }
+
+    this->root->color = BLACK;
+}
+
+template <class K, class T>
+void RedBlackTree<K, T>::insert(const K& key, const T& value) {
+    RBTNode* newNode = new RBTNode(key, value);
+
+    if (!this->root) {
+        newNode->color = BLACK;  // root always black
+        this->root = newNode;
+        return;
+    }
+
+    RBTNode* cur = this->root;
+    RBTNode* parent = nullptr;
+
+    // normal BST insertion
+    while (cur) {
+        parent = cur;
+        if (key < cur->key) cur = cur->left;
+        else                cur = cur->right;
+    }
+
+    newNode->parent = parent;
+    if (key < parent->key)
+        parent->left = newNode;
+    else
+        parent->right = newNode;
+
+    // fix red-black properties
+    insertHelper(newNode);
 }
 
 template <class K, class T>
