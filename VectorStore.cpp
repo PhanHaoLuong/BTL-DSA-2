@@ -391,9 +391,20 @@ void RedBlackTree<K, T>::rotateRight(RBTNode* node) {
     RBTNode* x = node->left;
     RBTNode* r = x->right;
 
-    x->right = node;
     node->left = r;
+    if (r) r->parent = node;
 
+    x->right = node;
+    x->parent = node->parent;
+    node->parent = x;
+
+    if (!x->parent) {
+        this->root = x;
+    } else if (x->parent->left == node) {
+        x->parent->left = x;
+    } else {
+        x->parent->right = x;
+    }
 }
 
 template <class K, class T>
@@ -403,8 +414,20 @@ void RedBlackTree<K, T>::rotateLeft(RBTNode* node) {
     RBTNode* y = node->right;
     RBTNode* l = y->left;
 
-    y->left = node;
-    node->right = l;
+    node->left = l;
+    if (l) l->parent = node;
+
+    l->left= node;
+    l->parent = node->parent;
+    node->parent = y;
+
+    if (!y->parent) {
+        this->root = y;
+    } else if (y->parent->left == node) {
+        y->parent->left = y;
+    } else {
+        y->parent->right = y;
+    }
 }
 
 template <class K, class T>
