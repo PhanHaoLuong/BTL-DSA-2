@@ -849,6 +849,14 @@ std::ostream& operator<<(std::ostream& os, const VectorRecord& record) {
 // =====================================
 // VectorStore implementation
 // =====================================
+int VectorStore::size() {
+    return this->size;
+}
+
+int VectorStore::empty() {
+    return (this->size == 0 ? true : false);
+}
+
 
 //TODO: Implement all VectorStore methods here
 
