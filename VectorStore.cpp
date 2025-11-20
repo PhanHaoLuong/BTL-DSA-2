@@ -175,7 +175,7 @@ typename AVLTree<K, T>::AVLNode* AVLTree<K, T>::removeHelper(AVLNode* node, cons
                 temp = node;
                 node = nullptr;
             } else *node = *temp;
-            free(temp);
+            delete temp;
         } else {
             AVLNode* temp = minNode(node->pRight);
 
@@ -414,11 +414,11 @@ void RedBlackTree<K, T>::rotateLeft(RBTNode* node) {
     RBTNode* y = node->right;
     RBTNode* l = y->left;
 
-    node->left = l;
+    node->right = l;
     if (l) l->parent = node;
 
-    l->left= node;
-    l->parent = node->parent;
+    y->left= node;
+    y->parent = node->parent;
     node->parent = y;
 
     if (!y->parent) {
@@ -497,8 +497,13 @@ void RedBlackTree<K, T>::clear() {
 }
 
 template <class K, class T>
-void RedBlackTree<K, T>::insertHelper(RBTNode* node) {
-    while (node != this->root && node->parent->color == RED) {
+bool RedBlackTree<K, T>::isRed(RBTNode* node) {
+    return (node && node->color == RED);
+}
+
+template <class K, class T>
+void RedBlackTree<K, T>::fixInsert(RBTNode* node) {
+    while (node != this->root && isRed(node->parent)) {
         RBTNode* parent = node->parent;
         RBTNode* grand = parent->parent;
 
@@ -507,7 +512,7 @@ void RedBlackTree<K, T>::insertHelper(RBTNode* node) {
             RBTNode* uncle = grand->right;
 
             // Case 1: uncle is RED → recolor
-            if (uncle && uncle->color == RED) {
+            if (isRed(uncle)) {
                 parent->color = BLACK;
                 uncle->color = BLACK;
                 grand->color = RED;
@@ -518,6 +523,9 @@ void RedBlackTree<K, T>::insertHelper(RBTNode* node) {
                 if (node == parent->right) {
                     node = parent;
                     rotateLeft(node);
+
+                    parent = node->parent;
+                    grand = parent->parent;
                 }
                 // Case 3: node is left child → rotate right
                 parent->color = BLACK;
@@ -530,7 +538,7 @@ void RedBlackTree<K, T>::insertHelper(RBTNode* node) {
         else {
             RBTNode* uncle = grand->left;
 
-            if (uncle && uncle->color == RED) {
+            if (isRed(uncle)) {
                 parent->color = BLACK;
                 uncle->color = BLACK;
                 grand->color = RED;
@@ -540,6 +548,9 @@ void RedBlackTree<K, T>::insertHelper(RBTNode* node) {
                 if (node == parent->left) {
                     node = parent;
                     rotateRight(node);
+
+                    parent = node->parent;
+                    grand = parent->parent;
                 }
                 parent->color = BLACK;
                 grand->color = RED;
@@ -564,7 +575,6 @@ void RedBlackTree<K, T>::insert(const K& key, const T& value) {
     RBTNode* cur = this->root;
     RBTNode* parent = nullptr;
 
-    // normal BST insertion
     while (cur) {
         parent = cur;
         if (key < cur->key) cur = cur->left;
@@ -577,13 +587,189 @@ void RedBlackTree<K, T>::insert(const K& key, const T& value) {
     else
         parent->right = newNode;
 
-    // fix red-black properties
-    insertHelper(newNode);
+    fixInsert(newNode);
+}
+
+template <class K, class T>
+typename RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::maxNode(RBTNode* node) {
+    RBTNode* current = node;
+
+    while (current && current->right) {
+        current = current->right;
+    }
+
+    return current;
+}
+
+template <class K, class T>
+void RedBlackTree<K, T>::fixRemove(RBTNode* x, RBTNode* xParent) {
+    // Loop until we've fixed the problem or reached root
+    while (x != this->root && !isRed(x)) {
+        
+        // Determine if x is left or right child
+        // Special handling for when x is nullptr
+        bool xIsLeftChild;
+        if (x != nullptr) {
+            xIsLeftChild = (x == xParent->left);
+        } else {
+            // x is nullptr, check which child of parent is nullptr
+            xIsLeftChild = (xParent->left == nullptr);
+        }
+        
+        if (xIsLeftChild) {
+            // ============================================
+            // X IS LEFT CHILD - Handle left-side cases
+            // ============================================
+            RBTNode* s = xParent->right;  // sibling
+            
+            // Case 2: Red sibling
+            if (isRed(s)) {
+                s->color = BLACK;
+                xParent->color = RED;
+                rotateLeft(xParent);
+                s = xParent->right;  // Update sibling after rotation
+            }
+            
+            // Case 3: Black sibling, both children black
+            if (!isRed(s->left) && !isRed(s->right)) {
+                s->color = RED;
+                x = xParent;
+                xParent = x->parent;
+            } else {
+                // Case 4: Near child red, far child black
+                if (!isRed(s->right)) {
+                    if (s->left) s->left->color = BLACK;
+                    s->color = RED;
+                    rotateRight(s);
+                    s = xParent->right;  // Update sibling after rotation
+                }
+                
+                // Case 5: Far child red (terminal case)
+                s->color = xParent->color;
+                xParent->color = BLACK;
+                if (s->right) s->right->color = BLACK;
+                rotateLeft(xParent);
+                x = this->root;  // Force loop to exit - we're done!
+            }
+            
+        } else {
+            // ============================================
+            // X IS RIGHT CHILD - Handle right-side cases (MIRROR)
+            // ============================================
+            RBTNode* s = xParent->left;  // sibling (on left now)
+            
+            // Case 2: Red sibling
+            if (isRed(s)) {
+                s->color = BLACK;
+                xParent->color = RED;
+                rotateRight(xParent);  // Mirror: rotateRight
+                s = xParent->left;     // Update sibling after rotation
+            }
+            
+            // Case 3: Black sibling, both children black
+            if (!isRed(s->right) && !isRed(s->left)) {
+                s->color = RED;
+                x = xParent;
+                xParent = x->parent;
+            } else {
+                // Case 4: Near child red, far child black
+                // Near child is s->right (closer to x)
+                // Far child is s->left (farther from x)
+                if (!isRed(s->left)) {
+                    if (s->right) s->right->color = BLACK;
+                    s->color = RED;
+                    rotateLeft(s);     // Mirror: rotateLeft
+                    s = xParent->left; // Update sibling after rotation
+                }
+                
+                // Case 5: Far child red (terminal case)
+                s->color = xParent->color;
+                xParent->color = BLACK;
+                if (s->left) s->left->color = BLACK;  // Far child is left
+                rotateRight(xParent);  // Mirror: rotateRight
+                x = this->root;        // Force loop to exit - we're done!
+            }
+        }
+    }
+    
+    // If x is red (or became red), color it black to absorb extra black
+    if (x) {
+        x->color = BLACK;
+    }
 }
 
 template <class K, class T>
 void RedBlackTree<K, T>::remove(const K& key) {
-
+    // Step 1: Find the node to delete
+    RBTNode* z = this->root;
+    while (z) {
+        if (key == z->key) {
+            break;
+        } else if (key < z->key) {
+            z = z->left;
+        } else {
+            z = z->right;
+        }
+    }
+    
+    if (!z) return;  // Key not found
+    
+    RBTNode* toDelete = z;  // The node we'll actually delete
+    Color deletedColor;     // Track the color
+    RBTNode* x;            // Replacement node
+    RBTNode* xParent;      // Parent of replacement
+    
+    // Step 2: Handle 2-children case
+    if (z->left && z->right) {
+        // Find predecessor (maxNode in left subtree)
+        RBTNode* pred = maxNode(z->left);
+        
+        // Swap data (not the nodes themselves)
+        z->key = pred->key;
+        z->data = pred->data;
+        
+        // Now delete the predecessor instead
+        toDelete = pred;
+    }
+    
+    // Step 3: toDelete now has at most 1 child
+    deletedColor = toDelete->color;
+    xParent = toDelete->parent;
+    
+    // Identify replacement
+    if (toDelete->left) {
+        x = toDelete->left;
+    } else {
+        x = toDelete->right;  // Could be nullptr
+    }
+    
+    // Step 4: Replace toDelete with x
+    if (!xParent) {
+        // Deleting root
+        this->root = x;
+    } else if (toDelete == xParent->left) {
+        xParent->left = x;
+    } else {
+        xParent->right = x;
+    }
+    
+    // Update x's parent (if x exists)
+    if (x) {
+        x->parent = xParent;
+    }
+    
+    // Step 5: Delete the node
+    delete toDelete;
+    
+    // Step 6: Fix violations if we deleted a black node
+    if (deletedColor == BLACK) {
+        fixRemove(x, xParent);
+    }
+    
+    // Step 7: Ensure root is black
+    if (this->root) {
+        this->root->color = BLACK;
+    }
 }
 
 template <class K, class T>
@@ -593,8 +779,8 @@ typename RedBlackTree<K, T>::RBTNode* RedBlackTree<K, T>::find(const K& key) con
 	RBTNode* current = this->root;
 	while (current) {
 		if (current->key == key) return current;
-		else if (current->key < key) current = current->left;
-		else current = current->right;
+		else if (current->key < key) current = current->right;
+		else current = current->left;
 	}
 
 	return nullptr;
@@ -607,8 +793,8 @@ bool RedBlackTree<K, T>::contains(const K& key) const {
 	RBTNode* current = this->root;
 	while (current) {
 		if (current->key == key) return true;
-		else if (current->key < key) current = current->left;
-		else current = current->right;
+		else if (current->key < key) current = current->right;
+		else current = current->left;
 	}
 
 	return false;

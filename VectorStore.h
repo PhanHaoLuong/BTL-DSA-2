@@ -44,7 +44,9 @@ class AVLTree {
         AVLNode* rotateLeft(AVLNode*& node);
         int height(AVLNode* node);
         BalanceValue getBalance(AVLNode* node);
+
         void clearHelper(AVLNode* node);
+
 
     public:
         AVLTree()
@@ -54,9 +56,9 @@ class AVLTree {
 		};
         void insert(const K& key, const T& value);
         AVLNode* insertHelper(AVLNode* node, const K& key, const T& value);
+        AVLNode* minNode(AVLNode* node);
         void remove(const K& key);
         AVLNode* removeHelper(AVLNode* node, const K& key);
-        AVLNode* minNode(AVLNode* node);
         bool contains(const K& key) const;
 
         int getHeight() const;
@@ -107,8 +109,13 @@ private:
 protected:
     void rotateLeft(RBTNode* node);
     void rotateRight(RBTNode* node);
+
 	void clearHelper(RBTNode* node);
-    void insertHelper(RBTNode* node);
+
+    bool isRed(RBTNode* node);
+    void fixInsert(RBTNode* node);
+
+    void fixRemove(RBTNode* node, RBTNode* parent);
 
     RBTNode* lowerBoundNode(const K& key) const;
     RBTNode* upperBoundNode(const K& key) const;
@@ -124,6 +131,7 @@ public:
     int size() const;
     void clear();
     void insert(const K& key, const T& value);
+    RBTNode* maxNode(RBTNode* node);
     void remove(const K& key);
     RBTNode* find(const K& key) const;
     bool contains(const K& key) const;
