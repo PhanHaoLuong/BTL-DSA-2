@@ -198,10 +198,10 @@ class VectorStore {
         VectorRecord* findVectorNearestToDistance(double targetDistance) const; 
 
     public:
-        VectorStore(int dimension = 512,
+        VectorStore(int dimension,
                     std::vector<float>* (*embeddingFunction)(const std::string&),
                     const std::vector<float>& referenceVector)
-        : dimension(dimension); embeddingFunction(embeddingFunction); referenceVector(referenceVector){}
+        : dimension(dimension), embeddingFunction(embeddingFunction), referenceVector(new std::vector<float>(referenceVector)), vectorStore(new AVLTree<double, VectorRecord>()), normIndex(new RedBlackTree<double, VectorRecord>()), count(0), averageDistance(0.0), rootVector(nullptr) {}
         ~VectorStore() {
             this->clear();
         };

@@ -1,5 +1,6 @@
 // NOTE: Per assignment rules, only this single include is allowed here.
 #include "VectorStore.h"
+#include <vector>
 
 // =====================================
 // Helper functions
@@ -850,13 +851,34 @@ std::ostream& operator<<(std::ostream& os, const VectorRecord& record) {
 // VectorStore implementation
 // =====================================
 int VectorStore::size() {
-    return this->size;
+    return this->count;
 }
 
-int VectorStore::empty() {
-    return (this->size == 0 ? true : false);
+bool VectorStore::empty() {
+    return (this->count = 0 ? true : false);
 }
 
+std::vector<float>* VectorStore::preprocessing(std::string rawText) {
+	vector<float>* res = this->embeddingFunction(rawText);
+	res->resize(this->dimension);
+
+	return res;
+}
+
+void VectorStore::addText(std::string rawText) {
+	vector<float>* processed = this->preprocessing(rawText);
+	vector<float>* ref = this->referenceVector;
+
+	float sum = 0; float currentDiff = 0;
+	for (int i = 0; i < ref->size(); ++i) {
+		currentDiff = (*processed)[i] - (*ref)[i];
+		sum += pow(currentDiff, 2);
+	}
+
+	float distance = sqrt(sum);
+
+	this->averageDistance = ((this->averageDistance * this->size()) + distance) / (this->size() + 1);
+}
 
 //TODO: Implement all VectorStore methods here
 
