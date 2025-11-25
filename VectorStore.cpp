@@ -860,7 +860,9 @@ bool VectorStore::empty() {
 
 std::vector<float>* VectorStore::preprocessing(std::string rawText) {
 	vector<float>* res = this->embeddingFunction(rawText);
-	res->resize(this->dimension);
+
+    if (res->size() > this->dimension) res->resize(this->dimension);
+    else if (res->size() < this->dimension) res->resize(this->dimension, 0.0f);
 
 	return res;
 }
@@ -918,6 +920,7 @@ int VectorStore::getId(int index) {
     return res->id;
 }
 
+// TODO
 bool VectorStore::removeAt(int index) {}
 
 void VectorStore::setReferenceVector(const std::vector<float>& newReference) {
@@ -991,10 +994,12 @@ void VectorStore::forEach(void (*action)(vector<float>&, int, std::string&)) {
     });
 }
 
-std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
+// TODO
+std::vector<int> VectorStore::getAllIdsSortedByDistnce() const {
 
 }
 
+//TODO
 std::vector<VectorRecord*> VectorStore::getAllVectorsSortedByDistance() const {
 
 }
