@@ -878,6 +878,91 @@ void VectorStore::addText(std::string rawText) {
 	float distance = sqrt(sum);
 
 	this->averageDistance = ((this->averageDistance * this->size()) + distance) / (this->size() + 1);
+
+    float procSum = 0;
+    for (float val : *processed) {
+        procSum += pow(val, 2);
+    }
+    float euclideanNorm = sqrt(procSum);
+
+    if (this->empty()) this->rootVector = processed;
+}
+
+VectorRecord* VectorStore::getVector(int index) {}
+
+string VectorStore::getRawText(int index) {}
+
+int VectorStore::getId(int index) {}
+
+bool VectorStore::removeAt(int index) {}
+
+void VectorStore::setReferenceVector(const std::vector<float>& newReference) {
+
+}
+
+vector<float>* VectorStore::getReferenceVector() const {
+    return this->referenceVector;
+}   
+
+VectorRecord* VectorStore::getRootVector() const {
+    return this->rootVector;
+}
+
+double VectorStore::getAverageDistance() const {
+    return this->averageDistance;
+}
+
+void VectorStore::setEmbeddingFunction(std::vector<float>* (*newEmbeddingFunction)(const std::string&)) {
+    this->embeddingFunction = newEmbeddingFunction; 
+}
+
+void VectorStore::forEach(void (*action)(vector<float>&, int, std::string&)) {
+    vectorStore->inorderTraversal([&action](const VectorRecord& record)->void {
+        action(*(record.vector), record.id, const_cast<std::string&>(record.rawText));
+    });
+}
+
+std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
+
+}
+
+std::vector<VectorRecord*> VectorStore::getAllVectorsSortedByDistance() const {
+
+}
+
+double VectorStore::cosineSimilarity(const vector<float>& v1, const vector<float>& v2) {
+    double dotProduct = 0.0;
+    double normV1 = 0.0;
+    double normV2 = 0.0;
+
+    for (int i = 0; i < v1.size(); ++i) {
+        dotProduct += v1[i] * v2[i];
+        normV1 += v1[i] * v1[i];
+        normV2 += v2[i] * v2[i];
+    }
+
+    return dotProduct / (sqrt(normV1) * sqrt(normV2));
+}
+
+double VectorStore::l1Distance(const vector<float>& v1, const vector<float>& v2) {
+    double sum = 0.0;
+
+    for (int i = 0; i < v1.size(); ++i) {
+        sum += fabs(v1[i] - v2[i]);
+    }
+
+    return sum;
+}
+
+double VectorStore::l2Distance(const vector<float>& v1, const vector<float>& v2) {
+    double sum = 0.0;
+
+    for (int i = 0; i < v1.size(); ++i) {
+        double diff = v1[i] - v2[i];
+        sum += diff * diff;
+    }
+
+    return sqrt(sum);
 }
 
 //TODO: Implement all VectorStore methods here
