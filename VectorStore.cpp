@@ -888,11 +888,35 @@ void VectorStore::addText(std::string rawText) {
     if (this->empty()) this->rootVector = processed;
 }
 
-VectorRecord* VectorStore::getVector(int index) {}
+VectorRecord* VectorStore::getVector(int index) {
+    if (index < 0 || index >= count) throw out_of_range("Index is invalid!");
 
-string VectorStore::getRawText(int index) {}
+    VectorRecord* res = nullptr;
+    int currentIndex = 0;
 
-int VectorStore::getId(int index) {}
+    auto action = [&](const VectorRecord& rec) {
+        if (currentIndex == index) {
+            res = const_cast<VectorRecord*>(&rec);
+        }
+        ++currentIndex;
+    };
+
+    vectorStore->inorderTraversal(action);
+
+    if (!res) throw out_of_range("Index is invalid!");
+
+    return res;
+}
+
+string VectorStore::getRawText(int index) {
+    VectorRecord* res = this->getVector(index);
+    return res->rawText;
+}
+
+int VectorStore::getId(int index) {
+    VectorRecord* res = this->getVector(index);
+    return res->id;
+}
 
 bool VectorStore::removeAt(int index) {}
 
