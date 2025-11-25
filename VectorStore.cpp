@@ -869,21 +869,21 @@ void VectorStore::addText(std::string rawText) {
 	vector<float>* processed = this->preprocessing(rawText);
 	vector<float>* ref = this->referenceVector;
 
-	float sum = 0; float currentDiff = 0;
+	double sum = 0; double currentDiff = 0;
 	for (int i = 0; i < ref->size(); ++i) {
 		currentDiff = (*processed)[i] - (*ref)[i];
 		sum += pow(currentDiff, 2);
 	}
 
-	float distance = sqrt(sum);
+	double distance = sqrt(sum);
 
 	this->averageDistance = ((this->averageDistance * this->size()) + distance) / (this->size() + 1);
 
-    float procSum = 0;
-    for (float val : *processed) {
+    double procSum = 0;
+    for (double val : *processed) {
         procSum += pow(val, 2);
     }
-    float euclideanNorm = sqrt(procSum);
+    double euclideanNorm = sqrt(procSum);
 
     if (this->empty()) this->rootVector = processed;
 }
@@ -921,12 +921,57 @@ int VectorStore::getId(int index) {
 bool VectorStore::removeAt(int index) {}
 
 void VectorStore::setReferenceVector(const std::vector<float>& newReference) {
+    *referenceVector = newReference;
 
+    vector<VectorRecord*> allRecords;
+    auto action = [&allRecords](const VectorRecord& r) {
+        allRecords.push_back(const_cast<VectorRecord*>(&r));
+    };
+
+    vectorStore->inorderTraversal(action);
+
+    vectorStore->clear();
+    normIndex->clear();
+
+    if (allRecords.empty()) return;
+
+    double totalDist = 0.0;
+    for (VectorRecord* r : allRecords) {
+        double newDist = l2Distance(*(record->vector), *referenceVector);
+        record->distanceFromReference = newDist;
+        totalDist += newDist;
+
+        double norm = 0.0;
+        for (float val : *(record->record)) {
+            norm += pow(val, 2);
+        }
+        norm = sqrt(norm);
+
+        vectorStore->insert(newDist, *record);
+        normIndex->insert(norm, *record);
+    }
+
+    this->averageDistance = totalDist / count;
+
+    VectorRecord* bestRoot = nullptr;
+    double minDiff = numberic_limits<double>::max();
+
+    for (VectorRecord* r : allRecords) {
+        double diff = abs(r->distanceFromReference - this->averageDistance);
+        if (diff < minDiff) {
+            minDiff = diff;
+            bestRoot = r;
+        }
+    }
+
+    delete this->rootVector;
+    if (bestRoot) rootVector = new VectorRecord(*bestRoot);
+    else rootVector = nullptr;
 }
 
 vector<float>* VectorStore::getReferenceVector() const {
     return this->referenceVector;
-}   
+}
 
 VectorRecord* VectorStore::getRootVector() const {
     return this->rootVector;
