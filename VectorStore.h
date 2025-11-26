@@ -84,7 +84,6 @@ class AVLTree {
 			inorderHelper(this->root, f);
 		}
 		
-
         AVLNode* getRoot() const { return root; }
 };
 
@@ -152,6 +151,19 @@ public:
 
     RBTNode* lowerBound(const K& key, bool& found) const;
     RBTNode* upperBound(const K& key, bool& found) const;
+
+    template <typename Func>
+    void inorderHelper(RBTNode* node, Func f) {
+        if (!node) return ;
+        inorder(node->pLeft, f);
+        f(node);
+        inorder(node->pRight, f);
+    }
+
+    template <typename Func>
+    void inorder(Func f) {
+        inorderHelper(this->root, f);
+    }
 
     void printTreeStructure() const;
 };
