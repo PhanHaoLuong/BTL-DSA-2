@@ -1123,6 +1123,31 @@ double VectorStore::estimateD_Linear(const std::vector<float>& query, int k, dou
 }
 
 int VectorStore::findNearest(const std::vector<float>& query, std::string metric = "cosine") {
+    double (*funcPtr)() = nullptr;
+
+    if (metric == "cosine") funcPtr = this->consineSimilarity;
+    else if (metric == "manhattan") funcPtr = this->l1Distance;
+    else if (metric == "euclidean") funcPtr = this->l2Distance;
+    else throw invalid_metric();
+
+    if (metric == "cosine") {
+        
+    }
+    else {
+        double closestVal = numeric_limits<double>::max();
+        int closestId = -1;
+
+        auto action = [&](const VectorRecord& r) {
+            double curVal = funcPtr(*query, *(r->vector));
+            if (curVal < closestVal) closestVal = curVal; closestId = r->id;
+        }
+
+        vectorStore->inorder(action);
+        return closestId;
+    }
+}
+
+int* VectorStore::topKNearest(const std::vector<float>& query, int k, std::string metric = "cosine") {
 
 }
 
