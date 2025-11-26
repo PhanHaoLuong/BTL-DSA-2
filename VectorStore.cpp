@@ -1043,13 +1043,26 @@ void VectorStore::forEach(void (*action)(vector<float>&, int, std::string&)) {
 
 // TODO
 std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
+	std::vector<int> idVec;
 
+	auto action = [&](const VectorRecord& r) {
+		idVec.push_back(r.id);
+	};
+
+	vectorStore->inorderTraversal(action);
+	return idVec;
 }
 
 //TODO
 std::vector<VectorRecord*> VectorStore::getAllVectorsSortedByDistance() const {
+	std::vector<VectorRecord*> rVec;
 
-}
+	auto action = [](const VectorRecord* r) {
+		rVec.push_back(r);
+	};
+	vectorStore->inorderTraversal(action);
+	return rVec;
+}	
 
 double VectorStore::cosineSimilarity(const vector<float>& v1, const vector<float>& v2) {
     double dotProduct = 0.0;
