@@ -1,7 +1,5 @@
 // NOTE: Per assignment rules, only this single include is allowed here.
 #include "VectorStore.h"
-#include <limits>
-#include <vector>
 
 // =====================================
 // Helper functions
@@ -936,7 +934,6 @@ int VectorStore::getId(int index) {
     return res->id;
 }
 
-// TODO
 bool VectorStore::removeAt(int index) {
     VectorRecord* removed = this->getVector(index);
     double removedDist = removed->distanceFromReference;
@@ -1043,7 +1040,6 @@ void VectorStore::forEach(void (*action)(vector<float>&, int, std::string&)) {
     });
 }
 
-// TODO
 std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
 	std::vector<int> idVec;
 
@@ -1055,7 +1051,6 @@ std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
 	return idVec;
 }
 
-//TODO
 std::vector<VectorRecord*> VectorStore::getAllVectorsSortedByDistance() const {
 	std::vector<VectorRecord*> rVec;
 
@@ -1113,8 +1108,15 @@ double VectorStore::l2Distance(const vector<float>& v1, const vector<float>& v2)
 }
 
 double VectorStore::getMaxDistance() const {
-	double maxDiff = 0;
-	
+	if (count == 0 || !rootVector)  return 0.0;
+
+    double maxDist = 0;
+    auto action = [&maxDist](const VectorRecord& r) {
+        if (r.distanceFromReference > maxDist) maxDist = r.distanceFromReference;
+    };
+
+    vectorStore->inorder(action);
+    return maxDist;
 }
 
 double VectorStore::getMinDistance() const {
