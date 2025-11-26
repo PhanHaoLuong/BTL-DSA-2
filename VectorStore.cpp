@@ -1107,6 +1107,25 @@ double VectorStore::l2Distance(const vector<float>& v1, const vector<float>& v2)
     return sqrt(sum);
 }
 
+double VectorStore::estimateD_Linear(const std::vector<float>& query, int k, double averageDistance, const std::vector<float>& reference, double c0_bias = 1e-9, double c1_slope = 0.05) {
+    float diff = 0.0f;
+    for (int i = 0; i < query.size(); ++i) {
+        diff += pow(query[i] - reference[i], 2);
+    }
+    diff = sqrt(diff);
+
+    double D = 0;
+    D = abs(diff - averageDistance);
+    D += c1_slope * averageDistance * k;
+    D += c0_bias;
+
+    return D;
+}
+
+int VectorStore::findNearest(const std::vector<float>& query, std::string metric = "cosine") {
+
+}
+
 double VectorStore::getMaxDistance() const {
 	if (count == 0 || !rootVector)  return 0.0;
 
