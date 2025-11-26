@@ -921,7 +921,41 @@ int VectorStore::getId(int index) {
 }
 
 // TODO
-bool VectorStore::removeAt(int index) {}
+bool VectorStore::removeAt(int index) {
+    VectorRecord* removed = this->getVector(index);
+    double removedDist = removed->distanceFromReference;
+
+    double removedNorm = 0.0;
+    for (float val : *(removed->vector)) {
+        removedNorm += pow(val, 2);
+    }
+    removedNorm = sqrt(removedNorm);
+
+    vectorStore->remove(removedDist);
+    normIndex->remove(removedNorm);
+
+    bool wasRoot = (rootVector && removed->id == rootVector->id);
+
+    delete removed->vector;
+
+    --this->count;
+
+    this->averageDistance = ((this->averageDistance * this->size()) + distance) / (this->size() + 1);
+
+    if (wasRoot && count > 0) {
+        try {
+            VectorRecord* newRoot = getVector(0);
+            rebuildTreeWithNewRoot(newRoot);
+        } catch(...) {}
+    }
+
+    if (count == 0) {
+        delete rootVector;
+        rootVector = nullptr;
+    }
+
+    return true;
+}
 
 void VectorStore::setReferenceVector(const std::vector<float>& newReference) {
     *referenceVector = newReference;
