@@ -1122,42 +1122,187 @@ double VectorStore::estimateD_Linear(const std::vector<float>& query, int k, dou
     return D;
 }
 
-int VectorStore::findNearest(const std::vector<float>& query, std::string metric = "cosine") {
-    double (*funcPtr)() = nullptr;
+int VectorStore::findNearest(const vector<float>& query, string metric) {
+    int nearestId = -1;
+    double bestScore = (metric == "cosine") ? -1.0 : numeric_limits<double>::max();
+    
+    auto action = [&](const VectorRecord& rec) {
+        double score = distanceByMetric(query, *(rec.vector), metric);
+        
+        bool better = false;
+        if (metric == "cosine") {
+            better = (score > bestScore);
+        } else {
+            better = (score < bestScore);
+        }
+        
+        if (better) {
+            bestScore = score;
+            nearestId = rec.id;
+        }
+    };
+    vectorStore->inorder(action);
+    
+    return nearestId;
+}
 
-    if (metric == "cosine") funcPtr = this->consineSimilarity;
-    else if (metric == "manhattan") funcPtr = this->l1Distance;
-    else if (metric == "euclidean") funcPtr = this->l2Distance;
-    else throw invalid_metric();
+int* VectorStore::topKNearest(const vector<float>& query, int k, string metric) {
+    if (k <= 0) throw invalid_argument("Invalid k");
+    if (k > count) k = count;
+
+    double normQ = 0.0;
+    for (float val : query) normQ += val * val;
+    normQ = sqrt(normQ);
+
+    double D = estimateD_Linear(query, k, averageDistance, *referenceVector);
+    
+    double lower = normQ - D;
+    double upper = normQ + D;
+
+    vector<VectorRecord*> candidates;
+    
+    auto filterAction = [&](const VectorRecord& rec) {
+        double recNorm = 0.0;
+        for (float val : *(rec.vector)) recNorm += val * val;
+        recNorm = sqrt(recNorm);
+
+        if (recNorm >= lower && recNorm <= upper) {
+            candidates.push_back(const_cast<VectorRecord*>(&rec));
+        }
+    };
+    
+    normIndex->inorder(filterAction);
+    
+    int m = candidates.size();
+    cout << "Value m: " << m << endl;
+
+    vector<pair<double, int>> scores;
+    for(VectorRecord* rec : candidates) {
+        double score = distanceByMetric(query, *(rec->vector), metric);
+        scores.push_back({score, rec->id});
+    }
 
     if (metric == "cosine") {
-        
-    }
-    else {
-        double closestVal = numeric_limits<double>::max();
-        int closestId = -1;
-
-        auto action = [&](const VectorRecord& r) {
-            double curVal = funcPtr(*query, *(r->vector));
-            if (curVal < closestVal) closestVal = curVal; closestId = r->id;
+        for(size_t i = 0; i < scores.size(); i++) {
+            for(size_t j = i + 1; j < scores.size(); j++) {
+                if(scores[j].first > scores[i].first) {
+                    swap(scores[i], scores[j]);
+                }
+            }
         }
-
-        vectorStore->inorder(action);
-        return closestId;
+    } else {
+        for(size_t i = 0; i < scores.size(); i++) {
+            for(size_t j = i + 1; j < scores.size(); j++) {
+                if(scores[j].first < scores[i].first) {
+                    swap(scores[i], scores[j]);
+                }
+            }
+        }
     }
+
+    int resultSize = (k < (int)scores.size()) ? k : (int)scores.size();
+    int* result = new int[resultSize];
+    for (int i = 0; i < resultSize; i++) {
+        result[i] = scores[i].second;
+    }
+
+    return result;
 }
 
-//TODO
-int* VectorStore::topKNearest(const std::vector<float>& query, int k, std::string metric = "cosine") {
+int* VectorStore::rangeQueryFromRoot(double minDist, double maxDist) const {
+    if (count == 0 || !rootVector) {
+        return new int[0];
+    }
 
+    if (minDist > maxDist) {
+        return new int[0];
+    }
+
+    vector<int> resultIds;
+    
+    auto action = [&](const VectorRecord& rec) {
+        double dist = rec.distanceFromReference;
+        if (dist >= minDist && dist <= maxDist) {
+            resultIds.push_back(rec.id);
+        }
+    };
+    vectorStore->inorder(action);
+
+    int size = resultIds.size();
+    int* result = new int[size];
+    for (int i = 0; i < size; i++) {
+        result[i] = resultIds[i];
+    }
+
+    return result;
 }
 
-int* VectorStore::rangeQueryFromRoot(double minDist, double maxDist) const {}
+int* VectorStore::rangeQuery(const vector<float>& query, double radius, string metric) const {
+    if (count == 0) {
+        return new int[0];
+    }
 
-int* VectorStore::rangeQuery(const std::vector<float>& query, double radius, std::string metric = "cosine") const {}
+    vector<int> resultIds;
+    
+    auto action = [&](const VectorRecord& rec) {
+        double score = distanceByMetric(query, *(rec.vector), metric);
+        
+        if (metric == "cosine") {
+            if (score >= radius) {
+                resultIds.push_back(rec.id);
+            }
+        } else {
+            if (score <= radius) {
+                resultIds.push_back(rec.id);
+            }
+        }
+    };
+    vectorStore->inorder(action);
 
-int* VectorStore::boundingBoxQuery(const std::vector<float>& minBound, const std::vector<float>& maxBound) const {}
-//END TODO
+    int* result = new int[resultIds.size()];
+    for (size_t i = 0; i < resultIds.size(); i++) {
+        result[i] = resultIds[i];
+    }
+
+    return result;
+}
+
+int* VectorStore::boundingBoxQuery(const vector<float>& minBound, const vector<float>& maxBound) const {
+    if (count == 0 || minBound.size() != maxBound.size() || minBound.empty()) {
+        return new int[0];
+    }
+    
+    for (size_t i = 0; i < minBound.size(); i++) {
+        if (minBound[i] > maxBound[i]) {
+            return new int[0];
+        }
+    }
+    
+    vector<int> ids;
+    
+    auto action = [&](const VectorRecord& rec) {
+        const vector<float>& v = *(rec.vector);
+        bool inside = true;
+
+        for (size_t i = 0; i < v.size() && i < minBound.size(); i++) {
+            if (v[i] < minBound[i] || v[i] > maxBound[i]) {
+                inside = false;
+                break;
+            }
+        }
+        
+        if (inside) {
+            ids.push_back(rec.id);
+        }
+    };
+    vectorStore->inorder(action);
+
+    int* result = new int[ids.size()];
+    for (size_t i = 0; i < ids.size(); i++) {
+        result[i] = ids[i];
+    }
+    return result;
+}
 
 double VectorStore::getMaxDistance() const {
 	if (count == 0 || !rootVector)  return 0.0;
