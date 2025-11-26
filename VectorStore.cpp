@@ -1,5 +1,6 @@
 // NOTE: Per assignment rules, only this single include is allowed here.
 #include "VectorStore.h"
+#include <limits>
 
 // =====================================
 // Helper functions
@@ -917,7 +918,7 @@ VectorRecord* VectorStore::getVector(int index) {
         ++currentIndex;
     };
 
-    vectorStore->inorderTraversal(action);
+    vectorStore->inorder(action);
 
     if (!res) throw out_of_range("Index is invalid!");
 
@@ -978,7 +979,7 @@ void VectorStore::setReferenceVector(const std::vector<float>& newReference) {
         allRecords.push_back(const_cast<VectorRecord*>(&r));
     };
 
-    vectorStore->inorderTraversal(action);
+    vectorStore->inorder(action);
 
     vectorStore->clear();
     normIndex->clear();
@@ -1036,7 +1037,7 @@ void VectorStore::setEmbeddingFunction(std::vector<float>* (*newEmbeddingFunctio
 }
 
 void VectorStore::forEach(void (*action)(vector<float>&, int, std::string&)) {
-    vectorStore->inorderTraversal([&action](const VectorRecord& record)->void {
+    vectorStore->inorder([&action](const VectorRecord& record)->void {
         action(*(record.vector), record.id, const_cast<std::string&>(record.rawText));
     });
 }
@@ -1060,7 +1061,7 @@ std::vector<VectorRecord*> VectorStore::getAllVectorsSortedByDistance() const {
 	auto action = [](const VectorRecord* r) {
 		rVec.push_back(r);
 	};
-	vectorStore->inorderTraversal(action);
+	vectorStore->inorder(action);
 	return rVec;
 }	
 
@@ -1097,6 +1098,17 @@ double VectorStore::l2Distance(const vector<float>& v1, const vector<float>& v2)
     }
 
     return sqrt(sum);
+}
+
+double VectorStore::getMaxDistance() const {
+	double maxDiff = 0;
+	
+	vectorStore->
+}
+
+double VectorStore::getMinDistance() const {
+	return vectorStore->minNode(vectorStore->getRoot())->key;
+
 }
 
 //TODO: Implement all VectorStore methods here

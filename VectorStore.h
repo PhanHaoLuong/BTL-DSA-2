@@ -71,6 +71,20 @@ class AVLTree {
         void inorderTraversal(void (*action)(const T&)) const;
 		void inorderTraversalHelper(AVLNode* node, void (*action)(const T&)) const;
 
+		template <typename Func>
+		void inorderHelper(AVLNode* node, Func f) {
+			if (!node) return ;
+			inorder(node->pLeft, f);
+			f(node);
+			inorder(node->pRight, f);
+		}
+
+		template <typename Func>
+		void inorder(Func f) {
+			inorderHelper(this->root, f);
+		}
+		
+
         AVLNode* getRoot() const { return root; }
 };
 
@@ -184,6 +198,7 @@ class VectorStore {
 
         int dimension;
         int count;
+		int curId = 1;
         double averageDistance;
 
         std::vector<float>* (*embeddingFunction)(const std::string&);
