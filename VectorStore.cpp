@@ -1147,9 +1147,17 @@ int VectorStore::findNearest(const std::vector<float>& query, std::string metric
     }
 }
 
+//TODO
 int* VectorStore::topKNearest(const std::vector<float>& query, int k, std::string metric = "cosine") {
 
 }
+
+int* VectorStore::rangeQueryFromRoot(double minDist, double maxDist) const {}
+
+int* VectorStore::rangeQuery(const std::vector<float>& query, double radius, std::string metric = "cosine") const {}
+
+int* VectorStore::boundingBoxQuery(const std::vector<float>& minBound, const std::vector<float>& maxBound) const {}
+//END TODO
 
 double VectorStore::getMaxDistance() const {
 	if (count == 0 || !rootVector)  return 0.0;
