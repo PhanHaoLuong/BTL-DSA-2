@@ -1,6 +1,5 @@
 // NOTE: Per assignment rules, only this single include is allowed here.
 #include "VectorStore.h"
-#include <vector>
 
 // =====================================
 // Helper functions
@@ -855,7 +854,7 @@ int VectorStore::size() {
 }
 
 bool VectorStore::empty() {
-    return (this->count = 0 ? true : false);
+    return (this->count == 0 ? true : false);
 }
 
 std::vector<float>* VectorStore::preprocessing(std::string rawText) {
@@ -879,15 +878,30 @@ void VectorStore::addText(std::string rawText) {
 
 	double distance = sqrt(sum);
 
-	this->averageDistance = ((this->averageDistance * this->size()) + distance) / (this->size() + 1);
+	++this->count;
+	this->averageDistance = ((this->averageDistance * this->size() - 1) + distance) / this->size();
 
     double procSum = 0;
     for (double val : *processed) {
         procSum += pow(val, 2);
     }
-    double euclideanNorm = sqrt(procSum);
+    double norm = sqrt(procSum);
 
-    if (this->empty()) this->rootVector = processed;
+	int id = (this->count == 0 ? 1 : this->curId);
+	++this->curId;
+
+	VectorRecord* newRec = new VectorRecord(id, rawText, processed, distance);
+	if (this->empty()) this->rootVector = newRec; 
+	else {
+		vectorStore->insert(distance, *newRec);
+		normIndex->insert(norm, *newRec);
+	}
+
+	double oldDiff = abs(rootVector->distanceFromReference - averageDistance);
+	double newDiff = abs(distance - averageDistance);
+	if (oldDiff < newDiff) {
+		this->rebuildTreeWithNewRoot(newRec);
+	}
 }
 
 VectorRecord* VectorStore::getVector(int index) {
@@ -939,8 +953,7 @@ bool VectorStore::removeAt(int index) {
     delete removed->vector;
 
     --this->count;
-
-    this->averageDistance = ((this->averageDistance * this->size()) + distance) / (this->size() + 1);
+    this->averageDistance = ((this->averageDistance * this->size()) - removedDist) / this->size();
 
     if (wasRoot && count > 0) {
         try {
@@ -974,24 +987,24 @@ void VectorStore::setReferenceVector(const std::vector<float>& newReference) {
 
     double totalDist = 0.0;
     for (VectorRecord* r : allRecords) {
-        double newDist = l2Distance(*(record->vector), *referenceVector);
-        record->distanceFromReference = newDist;
+        double newDist = l2Distance(*(r->vector), *referenceVector);
+        r->distanceFromReference = newDist;
         totalDist += newDist;
 
         double norm = 0.0;
-        for (float val : *(record->record)) {
+        for (float val : *(r->vector)) {
             norm += pow(val, 2);
         }
         norm = sqrt(norm);
 
-        vectorStore->insert(newDist, *record);
-        normIndex->insert(norm, *record);
+        vectorStore->insert(newDist, *r);
+        normIndex->insert(norm, *r);
     }
 
     this->averageDistance = totalDist / count;
 
     VectorRecord* bestRoot = nullptr;
-    double minDiff = numberic_limits<double>::max();
+    double minDiff = numeric_limits<double>::max();
 
     for (VectorRecord* r : allRecords) {
         double diff = abs(r->distanceFromReference - this->averageDistance);
@@ -1029,7 +1042,7 @@ void VectorStore::forEach(void (*action)(vector<float>&, int, std::string&)) {
 }
 
 // TODO
-std::vector<int> VectorStore::getAllIdsSortedByDistnce() const {
+std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
 
 }
 
