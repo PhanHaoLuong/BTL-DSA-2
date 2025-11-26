@@ -1,6 +1,7 @@
 // NOTE: Per assignment rules, only this single include is allowed here.
 #include "VectorStore.h"
 #include <limits>
+#include <vector>
 
 // =====================================
 // Helper functions
@@ -1050,7 +1051,7 @@ std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
 		idVec.push_back(r.id);
 	};
 
-	vectorStore->inorderTraversal(action);
+	vectorStore->inorder(action);
 	return idVec;
 }
 
@@ -1058,7 +1059,7 @@ std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
 std::vector<VectorRecord*> VectorStore::getAllVectorsSortedByDistance() const {
 	std::vector<VectorRecord*> rVec;
 
-	auto action = [](const VectorRecord* r) {
+	auto action = [&](const VectorRecord& r) {
 		rVec.push_back(r);
 	};
 	vectorStore->inorder(action);
@@ -1100,15 +1101,68 @@ double VectorStore::l2Distance(const vector<float>& v1, const vector<float>& v2)
     return sqrt(sum);
 }
 
+double VectorStore::l2Distance(const vector<float>& v1, const vector<float>& v2) const {
+    double sum = 0.0;
+
+    for (int i = 0; i < v1.size(); ++i) {
+        double diff = v1[i] - v2[i];
+        sum += diff * diff;
+    }
+
+    return sqrt(sum);
+}
+
 double VectorStore::getMaxDistance() const {
 	double maxDiff = 0;
 	
-	vectorStore->
 }
 
 double VectorStore::getMinDistance() const {
 	return vectorStore->minNode(vectorStore->getRoot())->key;
 
+}
+
+VectorRecord VectorStore::computeCentroid(const std::vector<VectorRecord*>& records) const {
+	if (records.empty()) {
+		return VectorRecord(-1, "", nullptr, 0.0);
+	}
+
+	size_t d = dimension;
+	vector<float>* sumVec = new vector<float>(d, 0.0f);
+
+	for (VectorRecord* rec : records) {
+		const vector<float>& vec = *(rec->vector);
+		for (size_t i = 0; i < d; i++) {
+			(*sumVec)[i] += vec[i];
+		}
+	}
+
+	for (size_t i = 0; i < d; i++) {
+		(*sumVec)[i] /= records.size();
+	}
+
+	double distToRef = l2Distance(*sumVec, *referenceVector);
+	return VectorRecord(-1, "centroid", sumVec, distToRef);
+}
+
+VectorRecord* VectorStore::findVectorNearestToDistance(double targetDistance) const {
+	if (count == 0) {
+		return nullptr;
+	}
+
+	VectorRecord* bestRecord = nullptr;
+	double minDiff = numeric_limits<double>::max();
+
+	auto action = [&](const VectorRecord& rec) {
+		double diff = abs(rec.distanceFromReference - targetDistance);
+		if (diff < minDiff) {
+			minDiff = diff;
+			bestRecord = const_cast<VectorRecord*>(&rec);
+		}
+	};
+	vectorStore->inorder(action);
+
+	return bestRecord;
 }
 
 //TODO: Implement all VectorStore methods here

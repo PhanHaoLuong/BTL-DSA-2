@@ -247,6 +247,7 @@ class VectorStore {
         double cosineSimilarity(const std::vector<float>& v1, const std::vector<float>& v2);
         double l1Distance(const std::vector<float>& v1, const std::vector<float>& v2);
         double l2Distance(const std::vector<float>& v1, const std::vector<float>& v2);
+        double l2Distance(const std::vector<float>& v1, const std::vector<float>& v2) const;
 
         double estimateD_Linear(const std::vector<float>& query, int k, double averageDistance, const std::vector<float>& reference, double c0_bias = 1e-9, double c1_slope = 0.05);
 
