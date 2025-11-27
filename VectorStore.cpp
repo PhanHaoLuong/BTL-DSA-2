@@ -1,6 +1,6 @@
 // NOTE: Per assignment rules, only this single include is allowed here.
 #include "VectorStore.h"
-
+using namespace std;
 // =====================================
 // Helper functions
 // =====================================
@@ -849,12 +849,42 @@ std::ostream& operator<<(std::ostream& os, const VectorRecord& record) {
 // =====================================
 // VectorStore implementation
 // =====================================
+double VectorStore::distanceByMetric(const std::vector<float>& a, const std::vector<float>& b, const std::string& metric) const {
+    if (metric == "cosine") {
+        return cosineSimilarity(a, b);
+    } 
+    else if (metric == "euclidean") {
+        return l2Distance(a, b);
+    } 
+    else if (metric == "manhattan") {
+        return l1Distance(a, b);
+    } 
+    else {
+        throw invalid_argument("Invalid metric");
+    }
+}
+
+void VectorStore::rebuildTreeWithNewRoot(VectorRecord* newRoot) {
+    delete rootVector;
+    rootVector = new VectorRecord(*newRoot);
+}
+
 int VectorStore::size() {
     return this->count;
 }
 
 bool VectorStore::empty() {
     return (this->count == 0 ? true : false);
+}
+
+void VectorStore::clear() {
+    this->vectorStore->clear();
+    this->normIndex->clear();
+    this->count = 0;
+    this->curId = 0;
+    this->averageDistance = 0.0;
+    delete this->rootVector;
+    this->rootVector = nullptr;
 }
 
 std::vector<float>* VectorStore::preprocessing(std::string rawText) {
@@ -867,41 +897,54 @@ std::vector<float>* VectorStore::preprocessing(std::string rawText) {
 }
 
 void VectorStore::addText(std::string rawText) {
-	vector<float>* processed = this->preprocessing(rawText);
-	vector<float>* ref = this->referenceVector;
+    vector<float>* res = preprocessing(rawText);
 
-	double sum = 0; double currentDiff = 0;
-	for (int i = 0; i < ref->size(); ++i) {
-		currentDiff = (*processed)[i] - (*ref)[i];
-		sum += pow(currentDiff, 2);
-	}
+    double distance = l2Distance(*res, *referenceVector);
 
-	double distance = sqrt(sum);
-
-	++this->count;
-	this->averageDistance = ((this->averageDistance * this->size() - 1) + distance) / this->size();
-
-    double procSum = 0;
-    for (double val : *processed) {
-        procSum += pow(val, 2);
+    double norm = 0.0;
+    for (float val : *res) {
+        norm += val * val;
     }
-    double norm = sqrt(procSum);
+    norm = sqrt(norm);
 
-	int id = (this->count == 0 ? 1 : this->curId);
-	++this->curId;
+    int maxId = 0;
+    if (count > 0) {
+        auto findMaxId = [&](const VectorRecord& rec) {
+            if (rec.id > maxId) {
+                maxId = rec.id;
+            }
+        };
+        vectorStore->inorder(findMaxId);
+    }
+    int newId = maxId + 1; 
 
-	VectorRecord* newRec = new VectorRecord(id, rawText, processed, distance);
-	if (this->empty()) this->rootVector = newRec; 
-	else {
-		vectorStore->insert(distance, *newRec);
-		normIndex->insert(norm, *newRec);
-	}
+    VectorRecord newRecord(newId, rawText, res, distance);
 
-	double oldDiff = abs(rootVector->distanceFromReference - averageDistance);
-	double newDiff = abs(distance - averageDistance);
-	if (oldDiff < newDiff) {
-		this->rebuildTreeWithNewRoot(newRec);
-	}
+    if (count == 0) {
+        rootVector = new VectorRecord(newRecord);
+        averageDistance = distance;
+        
+        vectorStore->insert(distance, newRecord);
+        normIndex->insert(norm, newRecord);
+        
+        count++;
+        return;
+    }
+
+    averageDistance = ((averageDistance * count) + distance) / (count + 1);
+
+    vectorStore->insert(distance, newRecord);
+    normIndex->insert(norm, newRecord);
+    count++;
+
+    if (rootVector) {
+        double distNew = std::abs(distance - averageDistance);
+        double distRoot = std::abs(rootVector->distanceFromReference - averageDistance);
+
+        if (distNew < distRoot) {
+            rebuildTreeWithNewRoot(&newRecord);
+        }
+    }
 }
 
 VectorRecord* VectorStore::getVector(int index) {
@@ -1052,13 +1095,13 @@ std::vector<int> VectorStore::getAllIdsSortedByDistance() const {
 }
 
 std::vector<VectorRecord*> VectorStore::getAllVectorsSortedByDistance() const {
-	std::vector<VectorRecord*> rVec;
+    std::vector<VectorRecord*> rVec;
 
-	auto action = [&](const VectorRecord& r) {
-		rVec.push_back(r);
-	};
-	vectorStore->inorder(action);
-	return rVec;
+    auto action = [&](const VectorRecord& r) {
+        rVec.push_back(const_cast<VectorRecord*>(&r));
+    };
+    vectorStore->inorder(action);
+    return rVec;
 }	
 
 double VectorStore::cosineSimilarity(const vector<float>& v1, const vector<float>& v2) {
@@ -1075,7 +1118,31 @@ double VectorStore::cosineSimilarity(const vector<float>& v1, const vector<float
     return dotProduct / (sqrt(normV1) * sqrt(normV2));
 }
 
+double VectorStore::cosineSimilarity(const vector<float>& v1, const vector<float>& v2) const {
+    double dotProduct = 0.0;
+    double normV1 = 0.0;
+    double normV2 = 0.0;
+
+    for (int i = 0; i < v1.size(); ++i) {
+        dotProduct += v1[i] * v2[i];
+        normV1 += v1[i] * v1[i];
+        normV2 += v2[i] * v2[i];
+    }
+
+    return dotProduct / (sqrt(normV1) * sqrt(normV2));
+}
+
 double VectorStore::l1Distance(const vector<float>& v1, const vector<float>& v2) {
+    double sum = 0.0;
+
+    for (int i = 0; i < v1.size(); ++i) {
+        sum += fabs(v1[i] - v2[i]);
+    }
+
+    return sum;
+}
+
+double VectorStore::l1Distance(const vector<float>& v1, const vector<float>& v2) const {
     double sum = 0.0;
 
     for (int i = 0; i < v1.size(); ++i) {
@@ -1107,19 +1174,13 @@ double VectorStore::l2Distance(const vector<float>& v1, const vector<float>& v2)
     return sqrt(sum);
 }
 
-double VectorStore::estimateD_Linear(const std::vector<float>& query, int k, double averageDistance, const std::vector<float>& reference, double c0_bias = 1e-9, double c1_slope = 0.05) {
-    float diff = 0.0f;
-    for (int i = 0; i < query.size(); ++i) {
-        diff += pow(query[i] - reference[i], 2);
+double VectorStore::estimateD_Linear(const std::vector<float>& query, int k, double averageDistance, const std::vector<float>& reference, double c0_bias, double c1_slope) {
+    if (count == 0 || k <= 0 || k > count) {
+        return 0.0;
     }
-    diff = sqrt(diff);
 
-    double D = 0;
-    D = abs(diff - averageDistance);
-    D += c1_slope * averageDistance * k;
-    D += c0_bias;
-
-    return D;
+    double dr = l2Distance(query, reference);
+    return abs(dr - averageDistance) + c1_slope * averageDistance * k + c0_bias;
 }
 
 int VectorStore::findNearest(const vector<float>& query, string metric) {

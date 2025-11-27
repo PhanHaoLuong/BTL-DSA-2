@@ -5,8 +5,6 @@
 // NOTE: Per assignment rules, only this single include is allowed here.
 #include "main.h"
 
-
-
 // ------------------------------
 // AVL balance enum
 // ------------------------------
@@ -72,11 +70,11 @@ class AVLTree {
 		void inorderTraversalHelper(AVLNode* node, void (*action)(const T&)) const;
 
 		template <typename Func>
-		void inorderHelper(AVLNode* node, Func f) {
+		void inorderHelper(AVLNode* node, Func& f) {
 			if (!node) return ;
-			inorder(node->pLeft, f);
-			f(node);
-			inorder(node->pRight, f);
+			inorderHelper(node->pLeft, f);
+			f(node->data);
+			inorderHelper(node->pRight, f);
 		}
 
 		template <typename Func>
@@ -153,11 +151,11 @@ public:
     RBTNode* upperBound(const K& key, bool& found) const;
 
     template <typename Func>
-    void inorderHelper(RBTNode* node, Func f) {
+    void inorderHelper(RBTNode* node, Func& f) {
         if (!node) return ;
-        inorder(node->pLeft, f);
-        f(node);
-        inorder(node->pRight, f);
+        inorderHelper(node->left, f);
+        f(node->data);
+        inorderHelper(node->right, f);
     }
 
     template <typename Func>
@@ -257,7 +255,9 @@ class VectorStore {
         std::vector<VectorRecord*> getAllVectorsSortedByDistance() const;
 
         double cosineSimilarity(const std::vector<float>& v1, const std::vector<float>& v2);
+        double cosineSimilarity(const std::vector<float>& v1, const std::vector<float>& v2) const;
         double l1Distance(const std::vector<float>& v1, const std::vector<float>& v2);
+        double l1Distance(const std::vector<float>& v1, const std::vector<float>& v2) const;
         double l2Distance(const std::vector<float>& v1, const std::vector<float>& v2);
         double l2Distance(const std::vector<float>& v1, const std::vector<float>& v2) const;
 
