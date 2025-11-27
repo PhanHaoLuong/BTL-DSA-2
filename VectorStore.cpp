@@ -925,17 +925,20 @@ VectorRecord* VectorStore::getVector(int index) {
 }
 
 string VectorStore::getRawText(int index) {
+    if (index < 0 || index >= count) throw out_of_range("Index is invalid!");
     VectorRecord* res = this->getVector(index);
     return res->rawText;
 }
 
 int VectorStore::getId(int index) {
+    if (index < 0 || index >= count) throw out_of_range("Index is invalid!");
     VectorRecord* res = this->getVector(index);
     return res->id;
 }
 
 bool VectorStore::removeAt(int index) {
-    VectorRecord* removed = this->getVector(index);
+
+if (index < 0 || index >= count) throw out_of_range("Index is invalid!");    VectorRecord* removed = this->getVector(index);
     double removedDist = removed->distanceFromReference;
 
     double removedNorm = 0.0;
@@ -1132,9 +1135,10 @@ int VectorStore::findNearest(const vector<float>& query, string metric) {
         bool better = false;
         if (metric == "cosine") {
             better = (score > bestScore);
-        } else {
+        } else if (metric == "Manhattan" || metric == "Euclidean"){
             better = (score < bestScore);
         }
+        else throw invalid_metric();
         
         if (better) {
             bestScore = score;
@@ -1147,8 +1151,8 @@ int VectorStore::findNearest(const vector<float>& query, string metric) {
 }
 
 int* VectorStore::topKNearest(const vector<float>& query, int k, string metric) {
-    if (k <= 0) throw invalid_argument("Invalid k");
-    if (k > count) k = count;
+    if (k <= 0 || k > count) throw invalid_argument("Invalid k");
+    //if (k > count) k = count;
 
     double normQ = 0.0;
     for (float val : query) normQ += val * val;
@@ -1190,7 +1194,7 @@ int* VectorStore::topKNearest(const vector<float>& query, int k, string metric) 
                 }
             }
         }
-    } else {
+    } else if (metric == "Manhattan" || metric == "Euclidean") {
         for(size_t i = 0; i < scores.size(); i++) {
             for(size_t j = i + 1; j < scores.size(); j++) {
                 if(scores[j].first < scores[i].first) {
@@ -1199,6 +1203,7 @@ int* VectorStore::topKNearest(const vector<float>& query, int k, string metric) 
             }
         }
     }
+    else throw invalid_metric();
 
     int resultSize = (k < (int)scores.size()) ? k : (int)scores.size();
     int* result = new int[resultSize];
@@ -1251,11 +1256,12 @@ int* VectorStore::rangeQuery(const vector<float>& query, double radius, string m
             if (score >= radius) {
                 resultIds.push_back(rec.id);
             }
-        } else {
+        } else if (metric == "Manhattan" || metric == "Euclidean"){
             if (score <= radius) {
                 resultIds.push_back(rec.id);
             }
         }
+        else throw invalid_metric();
     };
     vectorStore->inorder(action);
 
